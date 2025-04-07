@@ -1,6 +1,5 @@
 # LinearCDSfold
 
-## Description
 LinearCDSfold is a tool for designing a coding sequence (CDS) by jointly optimizing its secondary structure stability and codon usage.
 
 ## To Compile:
