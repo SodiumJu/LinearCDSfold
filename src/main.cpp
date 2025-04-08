@@ -132,6 +132,9 @@ int main(int argc, char** argv){
     const std::string &objective_ = input.getCmdOption("-o");
     if (!objective_.empty()) {
         objective = objective_;
+        if (objective == "DN") {
+            lambda = 1; // set default lambda = 1 when the objective is DN
+        }
         if (objective != "LD" && objective != "DN") {
             std::cerr << "Error: objective is not LD or DN." << std::endl;
             return 0;
@@ -222,6 +225,10 @@ int main(int argc, char** argv){
             }
         } else { // DERNA MODE
             // std out information
+            if (lambda <= 0 || lambda > 1){
+                std::cerr << "Error: If objective is DN, lambda must be in (0, 1]." << std::endl;
+                return 0;
+            }
             PrintInfo(file, beamsize, cai_file_path, lambda, objective);
 
             for(int i = 0; i < inseq_list.size(); i++) {

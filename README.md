@@ -54,7 +54,7 @@ The following is an example of `CAIFILE`.
 -l <LAMBDA>
 ```
 
-`LAMBDA` is a scaling parameter of a non-negative real number to balance the contributions of MFE of a coding sequence and its CAI value to the joint optimization objective. When the joint objective function defined by LinearDesign is applied (i.e., `OBJECTIVE` is set to `LD`), setting `LAMBDA` to `0` limits the optimization to consider only MFE. Otherwise, both MFE and CAI are included, with higher values of `LAMBDA` increasing the weight assigned to CAI. In this context, the default value of `LAMBDA` is `3`.  On the other hand, when the joint objective function defined by DERNA is utilized (i.e., `OBJECTIVE` is set to `DN`), setting `LAMBDA` to `0` restricts the optimization to consider only CAI. Otherwise, both MFE and CAI are included, with larger values of `LAMBDA` increasing the contribution of MFE.
+`LAMBDA` is a scaling parameter of a non-negative real number to balance the contributions of MFE of a coding sequence and its CAI value to the joint optimization objective. When the joint objective function defined by LinearDesign is applied (i.e., `OBJECTIVE` is set to `LD`), setting `LAMBDA` to `0` limits the optimization to consider only MFE. Otherwise, both MFE and CAI are included, with higher values of `LAMBDA` increasing the weight assigned to CAI. In this context, the default value of `LAMBDA` is `3`.  On the other hand, when the joint objective function defined by DERNA is utilized (i.e., `OBJECTIVE` is set to `DN`), setting `LAMBDA` to `1` restricts the optimization to consider only MFE. Otherwise, both MFE and CAI are included, with larger values of `LAMBDA` increasing the contribution of MFE.
 
 ### Example:
 
