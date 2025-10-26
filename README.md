@@ -3,8 +3,8 @@
 LinearCDSfold is a tool for designing a coding sequence (CDS) by jointly optimizing its secondary structure stability and codon usage.
 
 To see LinearCDSfold (version 1.0), please go to
-[LinearCDSfold v1](https://github.com/SodiumJu/LinearCDSfold/tree/9ba92cd827600db3618cbaf094f25424d90de3ed)
-or [download this version as ZIP](https://github.com/SodiumJu/LinearCDSfold/archive/9ba92cd827600db3618cbaf094f25424d90de3ed.zip)
+[LinearCDSfold v1](https://github.com/ablab-nthu/LinearCDSfold/tree/1dc4698e51576ecca6648d3f1d0449c3381a72da)
+or [download this version as ZIP](https://github.com/ablab-nthu/LinearCDSfold/archive/1dc4698e51576ecca6648d3f1d0449c3381a72da.zip)
 
 
 ## To Compile:
