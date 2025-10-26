@@ -8,6 +8,7 @@
 #include <tuple>
 #include <cassert>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 #include <string>
 #include <map>
@@ -17,28 +18,32 @@
 #include <chrono>
 #include <ctime>
 #include <math.h>
-
+#include <queue>
 
 #include "LCDSfold.h"
-
 using namespace std;
 
 int main(int argc, char** argv){
-
     std::string seq="";
+    std::string objective ;
     std::ifstream fasta_file;
     std::ifstream cai_file;
 
     std::string rna_seq, ami_seq;
     std::vector<std::string> rna_seq_list, inseq_list;
     std::vector<std::vector<int>> con_seq_list;
-    std::vector<float> cai_vector;
+    std::vector<double> cai_vector;
 
     bool is_rna_file = false;
     bool show_score = false;
     initialize();
-    beamsize = 500;
-    lambda = 3;
+    beamsize = 0;
+    lambda = 0;
+    pareto = false;
+    objective = "LD";
+    double threshold1 = 0.0025;
+    double threshold2 = 0.00075;
+    
 
     InputParser input(argc, argv);
     if(input.cmdOptionExists("-h")){
@@ -76,7 +81,7 @@ int main(int argc, char** argv){
             }
         }
     }
-
+    
     if (FindOption(argc, argv, "-rna")) {
         std::cout << "RNA MODE:  <SEQFILE> is RNA sequence fasta file." << std::endl;
         std::cout << "Validating MFE calculation of a RNA file." << std::endl;
@@ -86,14 +91,27 @@ int main(int argc, char** argv){
 
 
     show_score = FindOption(argc, argv, "-score");
+    
+    /*Objective function*/
+    const std::string &objective_ = input.getCmdOption("-o");
+    if (!objective_.empty()) {
+        objective = objective_;
+        if(objective == "DN") lambda = 1;//change default lambda 
+
+        if (objective != "LD" && objective != "DN") {
+            std::cerr << "Error: objective is not LD or DN." << std::endl;
+            return 0;
+        }
+
+    }
 
     // Read sequence file 
-    if (!file.empty()) {
+    if (!file.empty()){
         bool start_sign_ = false;
         fasta_file.open(file);
-        if (fasta_file.is_open()) {
-            while (fasta_file >> seq) {
-                if (seq.empty()) {
+        if (fasta_file.is_open()){
+            while (std::getline(fasta_file, seq)){
+                if (seq.empty()){
                     start_sign_ = false;
                     continue;
                 }else if (seq[0] == '>' or seq[0] == ';'){
@@ -102,7 +120,7 @@ int main(int argc, char** argv){
                         inseq_list.push_back(ami_seq);
                     ami_seq.clear();
                     continue;
-                }else if(start_sign_) {
+                }else if(start_sign_){
                     rtrim(seq);
                     ami_seq += seq;
                 }
@@ -115,178 +133,179 @@ int main(int argc, char** argv){
             return 0;
         }
     }else{
-        for (seq; getline(cin, seq);) {
+        for (seq; getline(cin, seq);){
             if (seq.empty()) continue;
-            if (!isalpha(seq[0])) {
+            if (!isalpha(seq[0])){
                 std::cerr << "Unrecognized sequence: " << seq << std::endl;
                 continue;}
             inseq_list.push_back(seq);
         }
     }
 
+    /*beam search*/
     const std::string &beamsize_ = input.getCmdOption("-b");
     if (!beamsize_.empty())
         beamsize = stoi(beamsize_);
 
-    std::string objective = "LD";
-    const std::string &objective_ = input.getCmdOption("-o");
-    if (!objective_.empty()) {
-        objective = objective_;
-        if (objective == "DN") {
-            lambda = 1; // set default lambda = 1 when the objective is DN
-        }
-        if (objective != "LD" && objective != "DN") {
-            std::cerr << "Error: objective is not LD or DN." << std::endl;
-            return 0;
-        }
+    /*pareto optimal solution*/
+    bool pareto_ = FindOption(argc, argv, "-p");
+    if(pareto_)
+        pareto = true;
 
-    }
-    
+
+    /*lambda*/
     const std::string &lambda_ = input.getCmdOption("-l");
     if (!lambda_.empty())  
         lambda = stof(lambda_);
+
+    /*threshold*/
+    const std::string &threshold1_ = input.getCmdOption("-t1");
+    if (!threshold1_.empty())  
+        threshold1 = stof(threshold1_);
+    const std::string &threshold2_ = input.getCmdOption("-t2");
+    if (!threshold2_.empty())  
+        threshold2 = stof(threshold2_);
     
-    std::string cai_file_path = "yeast_relative_adaptiveness.txt";
+    /*cai file*/
+    std::string cai_file_path = "human_relative_adaptiveness.txt";//default cai file (human)
     const std::string &cai_file_str = input.getCmdOption("-cai");
     if (!cai_file_str.empty())
         cai_file_path = cai_file_str;
-    
-    cai_file.open(cai_file_path);
-    if (cai_file.is_open()) {
-        std::string line;
-        while (std::getline(cai_file, line)) {
-            std::string token;
-            int pos = 0;      
-            while ((pos = line.find(",")) != std::string::npos) {
-                token = line.substr(0, pos);
-                cai_vector.push_back(std::stof(token));
-                line.erase(0, pos + 1);
+
+    if (isCSV(cai_file_path)){
+        std::cout << "[Debug] Reading CAI table from CSV file: " << cai_file_path << std::endl;
+        read_CAI_table_csv(cai_file_path, cai_vector);
+    } else {
+
+        cai_file.open(cai_file_path);
+        if (cai_file.is_open()){
+            std::string line;
+            while (std::getline(cai_file, line)) {
+                std::string token;
+                int pos = 0;      
+                while ((pos = line.find(",")) != std::string::npos) {
+                    token = line.substr(0, pos);
+                    cai_vector.push_back(std::stof(token));
+                    line.erase(0, pos + 1);
+                }
+                cai_vector.push_back(std::stof(line));
             }
-            cai_vector.push_back(std::stof(line));
-        }
-        if (objective == "DN" && lambda != 1) {
-            initialize_CAI_table(cai_vector, true);
-        } else if ((objective == "LD") || (objective == "DN" && lambda == 1)) {
-            initialize_CAI_table(cai_vector);
-        }
-    }else{
-        if(!cai_file_str.empty()) {
-            std::cerr << "Codon usage table: cannot open <CAIFILE>: " << cai_file_path << std::endl;
-            return 0;
-        }
-    }
-
-    if(!is_rna_file) { // NORMAL MODE
-        if ((objective == "LD") || (objective == "DN" && lambda == 1)) {
-            // std out information
-            PrintInfo(file, beamsize, cai_file_path, lambda, objective);
-
-            if (objective == "DN" && lambda == 1) // if lambda == 1, then we are not maximizing CAI, we use DL, with lambda = 0 to maximize MFE
-                lambda = 0;
-
-            for(int i = 0; i < inseq_list.size(); i++) {
-                ami_seq = inseq_list[i];
-                transform(ami_seq.begin(), ami_seq.end(), ami_seq.begin(), ::toupper);
-                ami_to_rna(rna_seq_list, ami_seq);
-                add_con_seq(con_seq_list, ami_seq);
-
-                rna_seq = rna_seq_list[i];
-                std::vector<int> con_seq = con_seq_list[i];
-
-                AllTables<int> alltables(rna_seq, rna_seq.size());
-                LCDSfoldCAI<int>(alltables, rna_seq, con_seq, ami_seq);
-                
-                std::string rna_solution;
-                std::string structure_solution;
-                int maxscore = BackTrack<int>(rna_solution, structure_solution, rna_seq, alltables, con_seq);
-
-                int weighted_cai_score = GetCAIScore(rna_solution);
-                float cai_value = -1;
-                if(lambda)
-                    cai_value = expf(float(weighted_cai_score) / float(LDCONST * lambda * ami_seq.size()));
-                else
-                    cai_value = expf(float(weighted_cai_score) / float(LDCONST * ami_seq.size()));
-                //output score and results
-                std::cout << "Coding sequence and its secondary structure:" << std::endl;
-                std::cout << rna_solution << std::endl;
-                std::cout << structure_solution << std::endl;
-                
-                if (show_score)
-                    std::cerr << "Score: " << maxscore << std::endl;
-
-                if(!lambda)
-                    std::cout << "Folding free energy: " << -(maxscore / 100.0) << " kcal/mol" << std::endl;
-                else
-                    std::cout << "Folding free energy: " << -float(maxscore - weighted_cai_score) / 100.0 << " kcal/mol" << std::endl;
-
-                std::cout << "CAI: " << std::fixed << std::setprecision(3) << cai_value << std::endl;
-                check_ami_solution(ami_seq, rna_solution);
-
-            }
-        } else { // DERNA MODE
-            // std out information
-            if (lambda <= 0 || lambda > 1){
-                std::cerr << "Error: If objective is DN, lambda must be in (0, 1]." << std::endl;
+        }else{
+            if(!cai_file_str.empty()){
+                std::cout << "[Error] Cannot open <CAIFILE>: " << cai_file_path << std::endl;
                 return 0;
             }
-            PrintInfo(file, beamsize, cai_file_path, lambda, objective);
+        }
 
-            for(int i = 0; i < inseq_list.size(); i++) {
+    }
+
+    //Reading output file name
+    std::string output_txt;
+    std::string output_csv;
+    if(input.cmdOptionExists("-txt"))
+        output_txt = input.getCmdOption("-txt");//edited
+    else output_txt = "result.txt";
+
+    if(input.cmdOptionExists("-csv"))
+        output_csv = input.getCmdOption("-csv");//edited
+    else output_csv = "result.csv";
+
+    if(pareto){
+        objective = "DN";
+        beamsize = 0;
+    }
+        
+    PrintInfo(output_txt,output_csv,file,beamsize, cai_file_path, lambda, objective, pareto, is_rna_file,true);
+    if(!is_rna_file){ // NORMAL MODE
+                
+        if((objective == "LD")){//LinearDesign mode
+            for(int i = 0; i < inseq_list.size(); i++){
+                timeval start,end;
+                int sec,usec;
+                ami_seq = inseq_list[i];
+                transform(ami_seq.begin(), ami_seq.end(), ami_seq.begin(), ::toupper);
+                ami_to_rna(rna_seq_list, ami_seq);
+                add_con_seq(con_seq_list, ami_seq);
+                rna_seq = rna_seq_list[i];
+                std::vector<int> con_seq = con_seq_list[i];
+
+                std::cout <<"Lambda: " << std::fixed << std::setprecision(3) << lambda << std::endl;
+                AllTables<double> alltables(rna_seq, rna_seq.size());
+                
+                initialize_CAI_table(cai_vector,false);
+                gettimeofday(&start, 0);
+                initialize_Special_HP_LD<double>(alltables,rna_seq, con_seq, ami_seq);
+                if(beamsize)//beam search
+                    LCDSfoldCAI_LD_beam<double>(alltables, rna_seq, con_seq, ami_seq);
+                else
+                    LCDSfoldCAI_LD_exact<double>(alltables, rna_seq, con_seq, ami_seq);
+
+                gettimeofday(&end, 0);
+                double TimeSpend = end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec);
+
+                std::vector<pair<double,double>> result = result_output<double>(alltables, rna_seq, con_seq, ami_seq,output_txt,output_csv,TimeSpend, show_score, false);
+            }
+        }
+        else{//DERNA mode
+            for(int i = 0; i < inseq_list.size(); i++){
+                timeval start,end;
+                int sec,usec;
                 ami_seq = inseq_list[i];
                 transform(ami_seq.begin(), ami_seq.end(), ami_seq.begin(), ::toupper);
                 ami_to_rna(rna_seq_list, ami_seq);
                 add_con_seq(con_seq_list, ami_seq);
 
+                
                 rna_seq = rna_seq_list[i];
                 std::vector<int> con_seq = con_seq_list[i];
+                if(pareto)
+                    Pareto_solution<double>(threshold1,threshold2,rna_seq, con_seq, ami_seq, cai_vector, output_txt, output_csv, show_score);
 
-                AllTables<float> alltables(rna_seq, rna_seq.size());
-                LCDSfoldCAI_derna<float>(alltables, rna_seq, con_seq, ami_seq);
-                
-                std::string rna_solution;
-                std::string structure_solution;
-                float maxscore = BackTrack<float>(rna_solution, structure_solution, rna_seq, alltables, con_seq);
+                else{
+                    std::cout <<"Lambda: " << std::fixed << std::setprecision(3) << lambda << std::endl;
+                    if(lambda == 0 )//prevent MFE not predictable
+                        lambda += 0.00001;
+                    AllTables<double> alltables(rna_seq, rna_seq.size());
+                    initialize_CAI_table(cai_vector,true);
+                    gettimeofday(&start, 0);
+                    initialize_Special_HP_DN<double>(alltables,rna_seq, con_seq, ami_seq);
+                    if(beamsize)
+                        LCDSfoldCAI_DN_beam<double>(alltables, rna_seq, con_seq, ami_seq);
+                    else
+                        LCDSfoldCAI_DN_exact<double>(alltables, rna_seq, con_seq, ami_seq);
+                    gettimeofday(&end, 0);
 
-                float weighted_cai_score = GetCAIScore_derna(rna_solution);
-                float cai_value = -1;
-
-                cai_value = expf(float(weighted_cai_score) / float((1.0 - lambda) * ami_seq.size()));
-
-                //output score and results
-                std::cout << "Coding sequence and its secondary structure:" << std::endl;
-                std::cout << rna_solution << std::endl;
-                std::cout << structure_solution << std::endl;
-                
-                if (show_score)
-                    std::cerr << "Score: " << maxscore << std::endl;
-
-                std::cout << "Folding free energy: " << -float(maxscore - weighted_cai_score) / (lambda * 100.0) << " kcal/mol" << std::endl;
-
-                std::cout << "CAI: " << std::fixed << std::setprecision(3) << cai_value << std::endl;
-                check_ami_solution(ami_seq, rna_solution);
-            }
+                    double TimeSpend = end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec);
+                    std::vector<pair<double,double>> result = result_output<double>(alltables, rna_seq, con_seq, ami_seq,output_txt,output_csv,TimeSpend, show_score, true);
+                    
+                }
+            }    
         }
-    } else { //RNA MODE
+    
+    }else{ //RNA MODE
         lambda = 0;
         std::cout << "RNA file: " << file << std::endl;
         std::cout << "Beam size: " << beamsize << std::endl;
-
-        for(int i = 0; i < inseq_list.size(); i++) {
+        
+        for(int i = 0; i < inseq_list.size(); i++){
+            timeval start,end;
+            int sec,usec;
             rna_seq = inseq_list[i];
             std::vector<int> con_seq(rna_seq.size(), normal_ami);
-            AllTables<int> alltables(rna_seq, rna_seq.size());
-            LCDSfoldCAI(alltables, rna_seq, con_seq, ami_seq);
+            AllTables<double> alltables(rna_seq, rna_seq.size());
+            gettimeofday(&start, 0);
+            initialize_Special_HP_LD<double>(alltables,rna_seq, con_seq, ami_seq);
+            LCDSfoldCAI_LD_exact<double>(alltables, rna_seq, con_seq, ami_seq);
+            gettimeofday(&end, 0);
             
-            std::string rna_solution;
-            std::string structure_solution;
-            int maxscore = BackTrack(rna_solution, structure_solution, rna_seq, alltables, con_seq);
+            double TimeSpend = end.tv_sec - start.tv_sec + 0.000001 * (end.tv_usec - start.tv_usec);
+            std::vector<pair<double,double>> result = result_output<double>(alltables, rna_seq, con_seq, ami_seq,output_txt,output_csv,TimeSpend, show_score, true);
 
-            std::cout << "Coding sequence and its secondary structure:" << std::endl;
-            std::cerr << rna_solution << std::endl;
-            std::cerr << structure_solution << std::endl;
-            std::cout << "Folding free energy: " << -(maxscore / 100.0) << " kcal/mol" << std::endl;
         }
+
     }
+
+    // cout<<"FINISH!"<<endl;
     
     return 0;
 }

@@ -1,4 +1,4 @@
-#pragma once
+
 #include "energy_parameter.h" // energy_parameter stuff
 
 // pairs: 0:NP 1:CG 2:GC 3:GU 4:UG 5:AU 6:UA 7:NN
@@ -8,6 +8,7 @@
 #include "intl21.h"
 #include "intl22.h"
 
+//241209 edited
 
 #define MAXLOOP 30
 
@@ -28,7 +29,7 @@ inline int v_score_hairpin(int i, int j, int base_i, int base_ni, int base_pj, i
     else
         energy = hairpin37[30] + (int)(lxc37*log((size)/30.));
 
-    if(size < 3) return energy; /* should only be the case when folding alignments */
+    if(size == 3) return energy + (type>2?TerminalAU37:0); /* should only be the case when folding alignments */
 
     energy += mismatchH37[type][base_ni][base_pj];
 
@@ -72,8 +73,6 @@ inline int v_score_external_paired(int nuci, int nucj) {
 
     int type = NUC_TO_PAIR(nuci, nucj);
     int energy = 0;
-
-    
 
     if(type > 2)
         energy += TerminalAU37;
@@ -149,5 +148,35 @@ inline int v_score_single(int i, int j, int p, int q,
       energy += mismatchI37[type][nuci1][nucj_1] + mismatchI37[type_2][nucq1][nucp_1];
     }
   }
+  return energy;
+}
+
+inline int v_score_exterior_mismatch(int i, int j, int nuci, int nuci1, int nucj_1, int nucj){
+
+  int type = NUC_TO_PAIR(nuci, nucj);
+  
+  return mismatchI37[type][nuci1][nucj_1];
+}
+
+inline int v_score_interior_mismatch(int p, int q, int nucp_1, int nucp, int nucq, int nucq1){
+
+  int type_2 = NUC_TO_PAIR(nucq, nucp);
+  
+  return mismatchI37[type_2][nucq1][nucp_1];
+}
+
+inline int v_score_asymmetry(int i, int j, int p, int q){
+  int n1 = p-i-1;
+  int n2 = j-q-1;
+  int nl, ns;
+
+  if (n1>n2) { nl=n1; ns=n2;}
+  else {nl=n2; ns=n1;}
+  return MIN2(MAX_NINIO, (nl-ns)*ninio37);
+}
+
+inline int v_score_size(int l){
+
+  int energy = (l <= MAXLOOP) ? (internal_loop37[l]) : (internal_loop37[30]+(int)(lxc37*log((l)/30.)));
   return energy;
 }

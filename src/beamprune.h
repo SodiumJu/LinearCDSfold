@@ -1,10 +1,7 @@
 #pragma once
 
-// global variable
-#include "functions.h"
 
-
-template <typename T>
+template<typename T>
 unsigned long QuickselectPartition(std::vector<std::pair<T, int>>& scores, unsigned long lower, unsigned long upper) {
     T pivot = scores[upper].first;
     while (lower < upper) {
@@ -17,7 +14,7 @@ unsigned long QuickselectPartition(std::vector<std::pair<T, int>>& scores, unsig
     return upper;
 }
 
-template <typename T>
+template<typename T>
 T QuickSelect(std::vector<std::pair<T, int>>& scores, unsigned long lower, unsigned long upper, unsigned long k) {
     if ( lower == upper ) return scores[lower].first;
     unsigned long split = QuickselectPartition(scores, lower, upper);
@@ -27,24 +24,27 @@ T QuickSelect(std::vector<std::pair<T, int>>& scores, unsigned long lower, unsig
     else return QuickSelect(scores, split+1, upper, k - length);
 }
 
-template <typename T>
+template<typename T>
 T BeamPrune(std::vector<int>& con_seq, std::string& rna_seq, std::unordered_map<int, State<T>> &bestMap, std::vector<std::unordered_map<int, State<T>>>& bestF, bool isN) {
-    
     std::vector<std::pair<T, int>> scores;
-
     scores.clear();
     bool have_previous;
     T newscore, pre_newscore, best_pre_newscore;
+    int seq_length = rna_seq.size();
 
     if (bestMap.size() <= beamsize || beamsize == 0) return VALUE_MIN<T>();
 
     for (auto &item : bestMap) {
 
         int tail_index = item.first;
-        int i, nuci, nucj;
-        std::tie(i, nuci, nucj) = GetIndexTuple(tail_index);
-
         State<T> cand = item.second;
+        int i, nuci, nuci_pair, nucj, nucx, len;
+        if(cand.MANNER == MANNER_C_StoCS)
+            std::tie(i, nuci, nuci_pair, nucj, nucx, len) = GetIndexTupleCS(tail_index);
+        else
+            std::tie(i, nuci, nucj) = GetIndexTuple(tail_index);
+
+        
         int i_1 = i - 1;
 
         if(isN){

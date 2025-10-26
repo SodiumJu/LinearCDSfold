@@ -1,11 +1,9 @@
-#pragma once
-#include "functions.h"
-
+#include <sstream>
+#include <fstream>
 template <typename T>
 constexpr T VALUE_MIN() { return std::numeric_limits<T>::lowest(); }
 
-
-#define SINGLE_MAX_LEN 30
+#define SINGLE_MAX_LEN 20
 #define MIN_STACKPAIR_GAP 5
 #define MIN_MULTI_GAP 10
 #define NOTON 16 // NUM_OF_TYPE_OF_NUCS
@@ -19,20 +17,30 @@ constexpr T VALUE_MIN() { return std::numeric_limits<T>::lowest(); }
 
 #define base_number 16
 #define square_base_number 256
+#define cube_base_number 4096
+#define fourthPower_base_number 65536
 
 
 //global variables
-float LDCONST = 100;
-float lambda;
+// double LDCONST = 100;
+double LDCONST = 100;
+double lambda;
 int beamsize;
+bool pareto;
+
+
 bool _allowed_pairs[NOTON][NOTON];
 bool xcon_table[3][2][NOTON][NOTON];
-std::unordered_map<char, std::unordered_map<int, int>> CodonSetCAIMap;
-std::unordered_map<std::string, int> CalCAIMap; //for get weighted CAI score from codon string
-
-std::unordered_map<char, std::unordered_map<int, float>> CodonSetCAIMap_derna;
-std::unordered_map<std::string, float> CalCAIMap_derna; //for get weighted CAI score from codon string
-
+// std::unordered_map<char, std::unordered_map<int,int>> CodonSetCAIMap;
+std::unordered_map<char, std::unordered_map<int, double>> CodonSetCAIMap;
+std::unordered_map<char, std::unordered_map<int, double>> CodonSetCAIMap_LD;
+std::unordered_map<char, std::unordered_map<int, double>> CodonSetCAIMap_DN;
+// std::unordered_map<std::string, int> CalCAIMap; //for get weighted CAI score from codon string
+std::unordered_map<std::string, double> CalCAIMap;
+std::unordered_map<std::string, double> CalCAIMap_DN;
+std::unordered_map<std::string, double> unweighted_CAIMap;
+std::unordered_map<int, std::string> sp_backtrack;
+std::unordered_map<std::string, float> cai_table_csv;
 // declaration of functions
 int BASE(const std::string& x);
 
@@ -44,28 +52,66 @@ std::unordered_map<std::string, std::string>  Amino_label = {
         {"*","NNN"}
     };
 
+std::unordered_map<char, std::vector<std::string>>  Amino_to_nucs = {
+    {'A',{"GCU","GCC","GCA","GCG"}},
+    {'R',{"CGU","CGC","CGA","CGG","AGA","AGG"}},
+    {'N',{"AAU","AAC"}},
+    {'D',{"GAU","GAC"}},
+    {'C',{"UGU","UGC"}},
+    {'Q',{"CAA","CAG"}},
+    {'E',{"GAA","GAG"}},
+    {'G',{"GGU","GGC","GGA","GGG"}},
+    {'H',{"CAU","CAC"}},
+    {'M',{"AUG"}},
+    {'I',{"AUU","AUC","AUA"}},
+    {'L',{"CUU","CUC","CUA","CUG","UUA","UUG"}},
+    {'K',{"AAA","AAG"}},
+    {'F',{"UUU","UUC"}},
+    {'P',{"CCU","CCC","CCA","CCG"}},
+    {'S',{"UCU","UCC","UCA","UCG","AGU","AGC"}},
+    {'T',{"ACU","ACC","ACA","ACG"}},
+    {'W',{"UGG"}},
+    {'Y',{"UAU","UAC"}},
+    {'V',{"GUU","GUC","GUA","GUG"}},
+};
+
 std::vector<std::vector<std::string>> CodonSet=
 {
-    {"I","AUU"},{"I","AUA"},{"I","AUC"},
-    {"L","CUA"},{"L","CUC"},{"L","CUG"},{"L","CUU"},{"L","UUA"},{"L","UUG"},
-    {"V","GUU"},{"V","GUA"},{"V","GUC"},{"V","GUG"},
-    {"F","UUU"},{"F","UUC"},
-    {"M","AUG"},
-    {"C","UGU"},{"C","UGC"},
-    {"A","GCA"},{"A","GCC"},{"A","GCG"},{"A","GCU"},
-    {"G","GGU"},{"G","GGC"},{"G","GGA"},{"G","GGG"},
-    {"P","CCU"},{"P","CCC"},{"P","CCA"},{"P","CCG"},
-    {"T","ACU"},{"T","ACC"},{"T","ACA"},{"T","ACG"},
-    {"S","UCU"},{"S","UCC"},{"S","UCA"},{"S","UCG"},{"S","AGU"},{"S","AGC"},
-    {"Y","UAU"},{"Y","UAC"},
-    {"W","UGG"},
-    {"Q","CAA"},{"Q","CAG"},
+    {"A","GCU"},{"A","GCC"},{"A","GCA"},{"A","GCG"},
+    {"R","CGU"},{"R","CGC"},{"R","CGA"},{"R","CGG"},{"R","AGA"},{"R","AGG"},
     {"N","AAU"},{"N","AAC"},
-    {"H","CAU"},{"H","CAC"},
-    {"E","GAA"},{"E","GAG"},
     {"D","GAU"},{"D","GAC"},
+    {"C","UGU"},{"C","UGC"},
+    {"Q","CAA"},{"Q","CAG"},
+    {"E","GAA"},{"E","GAG"},
+    {"G","GGU"},{"G","GGC"},{"G","GGA"},{"G","GGG"},
+    {"H","CAU"},{"H","CAC"},
+    {"M","AUG"},
+    {"I","AUU"},{"I","AUC"},{"I","AUA"},
+    {"L","CUU"},{"L","CUC"},{"L","CUA"},{"L","CUG"},{"L","UUA"},{"L","UUG"},
     {"K","AAA"},{"K","AAG"},
-    {"R","CGU"},{"R","CGC"},{"R","CGA"},{"R","CGG"},{"R","AGA"},{"R","AGG"}
+    {"F","UUU"},{"F","UUC"},
+    {"P","CCU"},{"P","CCC"},{"P","CCA"},{"P","CCG"},
+    {"S","UCU"},{"S","UCC"},{"S","UCA"},{"S","UCG"},{"S","AGU"},{"S","AGC"},
+    {"T","ACU"},{"T","ACC"},{"T","ACA"},{"T","ACG"},
+    {"W","UGG"},
+    {"Y","UAU"},{"Y","UAC"},
+    {"V","GUU"},{"V","GUC"},{"V","GUA"},{"V","GUG"},
+};
+
+std::unordered_map<std::string,int> sp_loops = {
+    {"CAACG",680},{"GUUAC",690},
+    {"CAACGG",550},{"CCAAGG",330},{"CCACGG",370},{"CCCAGG",340},{"CCGAGG",350},{"CCGCGG",360},{"CCUAGG",370},
+    {"CCUCGG",250},{"CUAAGG",360},{"CUACGG",280},{"CUCAGG",370},{"CUCCGG",270},{"CUGCGG",280},{"CUUAGG",350},
+    {"CUUCGG",370},{"CUUUGG",370},
+    {"ACAGUACU",280},{"ACAGUGAU",360},{"ACAGUGCU",290},{"ACAGUGUU",180}
+};
+
+std::vector<std::string> sp_loops_vec = {
+    "CAACG","GUUAC",
+    "CAACGG","CCAAGG","CCACGG","CCCAGG","CCGAGG","CCGCGG","CCUAGG","CCUCGG",
+    "CUAAGG","CUACGG","CUCAGG","CUCCGG","CUGCGG","CUUAGG","CUUCGG","CUUUGG",
+    "ACAGUACU","ACAGUGAU","ACAGUGCU","ACAGUGUU"
 };
 
 std::unordered_map<std::string, std::string>  re_Amino_label = 
@@ -150,30 +196,43 @@ void PrintHelp(){
           << "         where SEQFILE is an amino acid sequence file in FASTA format.\n"
           << "\n"
           << "OPTIONS:\n"
-          << "  -b <BEAMSIZE>:\n"
-          << "         BEAMSIZE is a parameter of beam size used by LinearCDSfold when running with\n"
-          << "         beam pruning, where the default of BEAMSIZE is 500.\n"
-          << "         To run LinearCDSfold without beam pruning, use the -b 0 option.\n"
           << "  -cai <CAIFILE>:\n"
           << "         CAIFILE is a file of codon usage frequencies, which contains the relative\n"
           << "         adaptiveness values of all the 64 codons, where the default of CAIFILE is\n"
           << "         yeast_relative_adaptiveness.txt.\n"
+          << "  -b <BEAMSIZE>:\n"
+          << "         BEAMSIZE is a parameter of beam size used by LinearCDSfold when running with\n"
+          << "         beam pruning, where the default of BEAMSIZE is 500.\n"
+          << "         To run LinearCDSfold without beam pruning, use the -b 0 option.\n"
           << "  -l <LAMBDA>:\n"
           << "         LAMBDA is a scaling parameter of a non-negative real number to balance the\n"
           << "         contributions of MFE (minimum free energy) of a coding sequence and its CAI (Codon\n"
           << "         Adaptation Index) value to the joint optimization objective, where the default of\n"
           << "         LAMBDA is 3. If LAMBDA is 0, then only MFE is considered in the joint optimization\n"
           << "         objective; otherwise, both MFE and CAI are considered and the larger the value of\n"
-          << "         LAMBDA, the greater the contribution of CAI.\n";
+          << "         LAMBDA, the greater the contribution of CAI.\n"
+          << "  -o <OBJECTIVE>:\n"
+          << "         OBJECTIVE represents the joint objective function for optimizing\n"
+          << "         both MFE (minimum free energy) and CAI (Codon Adaptation Index).\n"
+          << "         It can be set to either LD or DN. When OBJECTIVE is LD, the objective function\n"
+          << "         defined by LinearDesign is applied (i.e, MFE - LAMBDA * l * log CAI,\n"
+          << "         where l is the length of the input amino acid sequence). Conversely, if OBJECTIVE is DN,\n"
+          << "         the objective function defined by DERNA is utilized (i.e, LAMBDA * MFE - (1 - LAMBDA) * l * log CAI).\n"
+          << "         The default value of OBJECTIVE is set to LD."
+          << "  -p <PARETO>:\n"
+          << "         PARETO is a parameter to control an auto-search function. The auto-search funtion can\n"
+          << "         generate a set of pareto-optimal solutions automatically. It can be set to either 1 or 0.\n";
+
 }
 
 enum Manner {
-    NONE=0,
+    NONE = 0,
     MANNER_NONEtoN,
     MANNER_NONEtoF,
     MANNER_NONEtoS,
     MANNER_N_EtoN,
     MANNER_NtoC,
+    MANNER_S_HP,
     MANNER_S_EtoS,
     MANNER_CtoM1,
     MANNER_M1_CtoM2,
@@ -188,7 +247,9 @@ enum Manner {
     MANNER_F_CtoF,
     MANNER_C_StoCS,
     MANNER_S_CStoC,
+    MANNER_S_C_StoC,
     MANNER_CStoC,
+    MANNER_C_StoC,
     MANNER_CtoC,
     MANNER_S_CtoC
 };
@@ -207,6 +268,8 @@ std::string mannerToString(Manner manner) {
             return "MANNER_N_EtoN";
         case MANNER_NtoC:
             return "MANNER_NtoC";
+        case MANNER_S_HP:
+            return "MANNER_S_HP";
         case MANNER_S_EtoS:
             return "MANNER_S_EtoS";
         case MANNER_CtoC:
@@ -237,8 +300,12 @@ std::string mannerToString(Manner manner) {
             return "MANNER_F_CtoF";
         case MANNER_CStoC:
             return "MANNER_CStoC";
+        case MANNER_C_StoC:
+            return "MANNER_C_StoC";
         case MANNER_S_CStoC:
             return "MANNER_S_CStoC";
+        case MANNER_S_C_StoC:
+            return "MANNER_S_C_StoC";
         case MANNER_C_StoCS:
             return "MANNER_C_StoCS";
         default:
@@ -246,8 +313,71 @@ std::string mannerToString(Manner manner) {
     }
 }
 
+
+
+// inline int GetIndexCS(int i, int nuci, int nuci_pair,int nucj, int nucx ,int len){//i : start posi, nuci :start nuc, nuci_pair : the nuc pair with nuci ,nucj:end nuc, nucx: single start, len : single length
+//     return i*fourthPower_base_number*(SINGLE_MAX_LEN+1) + len * fourthPower_base_number+ nuci*cube_base_number+nuci_pair*square_base_number + nucj*base_number + nucx;
+// }
+// inline std::tuple<int, int, int, int, int, int> GetIndexTupleCS(int index_i_j) {
+//     int i = index_i_j/(fourthPower_base_number*(SINGLE_MAX_LEN+1));
+//     int temp = index_i_j % (fourthPower_base_number*(SINGLE_MAX_LEN+1));
+
+//     int len = index_i_j/(fourthPower_base_number);
+//     temp = index_i_j % (fourthPower_base_number);
+
+//     int nuci = temp / (cube_base_number);
+//     temp = temp % (cube_base_number);
+
+//     int nuci_pair = temp  / square_base_number;
+//     temp  = temp % square_base_number;
+
+//     int nucj = temp  / base_number;
+//     int nucx = temp  % base_number;
+
+//     return std::make_tuple(i, nuci, nuci_pair,nucj, nucx, len);
+// }
+
 inline int GetIndex(int i, int nuci, int nucj){
     return i*square_base_number+nuci*base_number+nucj;
+}
+
+// speedup
+inline int GetIndexSpeedup(int i, int nuci, int nuci1,int nucj_1, int nucj){//i : start posi, nuci :start nuc, nuci_pair : the nuc pair with nuci ,nucj:end nuc, nucx: single start, len : single length
+    return i*fourthPower_base_number + nuci* cube_base_number+ nuci1*square_base_number + nucj_1*base_number + nucj;
+}
+inline std::tuple<int, int, int, int, int> GetIndexTupleSpeedup(int index_i_j) {
+    int i = index_i_j/fourthPower_base_number;
+    int temp = index_i_j % fourthPower_base_number;
+
+    int nuci = temp/cube_base_number;
+    temp = temp % cube_base_number;
+
+    int nuci1 = temp / (square_base_number);
+    temp = temp % (square_base_number);
+
+    int nucj_1 = temp  / base_number;
+    int nucj = temp  % base_number;
+
+    return std::make_tuple(i, nuci,nuci1,nucj_1,nucj);
+}
+
+inline int GetIndexCS(int i, int nuci, int nuci_pair,int nucj, int nucx ,int len){//i : start posi, nuci :start nuc, nuci_pair : the nuc pair with nuci ,nucj:end nuc, nucx: single start, len : single length
+    return i*cube_base_number*(SINGLE_MAX_LEN+1) + len * cube_base_number+ nuci*square_base_number + nucj*base_number + nucx;
+}
+inline std::tuple<int, int, int, int, int, int> GetIndexTupleCS(int index_i_j) {
+    int i = index_i_j/(cube_base_number*(SINGLE_MAX_LEN+1));
+    int temp = index_i_j % (cube_base_number*(SINGLE_MAX_LEN+1));
+
+    int len = temp/(cube_base_number);
+    temp = temp % (cube_base_number);
+
+    int nuci = temp / (square_base_number);
+    temp = temp % (square_base_number);
+
+    int nucj = temp  / base_number;
+    int nucx = temp  % base_number;
+
+    return std::make_tuple(i, nuci, 0,nucj, nucx, len);
 }
 
 inline std::tuple<int, int, int> GetIndexTuple(int index_i_j) {
@@ -259,48 +389,54 @@ inline std::tuple<int, int, int> GetIndexTuple(int index_i_j) {
     return std::make_tuple(i, nuci, nucj);
 }
 
-template <typename T>
+template<typename T>
 struct State {
     T score;
     int index_1;
     int index_2;
+    int index_3;
     Manner MANNER;
     int last_pair_pos;
 
-    State() : score(VALUE_MIN<T>()), index_1(-1), index_2(-1), MANNER(NONE), last_pair_pos(-1){}
-    State(T  score_, const int& index_1_, const int& index_2_, Manner MANNER_)
-        : score(score_), index_1(index_1_), index_2(index_2_), MANNER(MANNER_){}
-    State(T  score_, const int& index_1_, const int& index_2_, Manner MANNER_, const int& last_pair_pos_)
-        : score(score_), index_1(index_1_), index_2(index_2_), MANNER(MANNER_), last_pair_pos(last_pair_pos_){}
+    State() : score(VALUE_MIN<T>()), index_1(-1), index_2(-1), index_3(-1),MANNER(NONE), last_pair_pos(-1){}
+    State(double score_, const int& index_1_, const int& index_2_, const int& index_3_, Manner MANNER_)
+        : score(score_), index_1(index_1_), index_2(index_2_), index_3(index_3_), MANNER(MANNER_){}
+    State(double score_, const int& index_1_, const int& index_2_, const int& index_3_,Manner MANNER_, const int& last_pair_pos_)
+        : score(score_), index_1(index_1_), index_2(index_2_), index_3(index_3_), MANNER(MANNER_), last_pair_pos(last_pair_pos_){}
 };
 
-template <typename T>
+template<typename T>
 class AllTables {
 
 public:
-
     std::vector<std::unordered_map<int, State<T>>> bestN;
-    std::vector<std::unordered_map<int, State<T>>> bestS;
+    std::vector<std::vector<std::unordered_map<int, State<T>>>> bestS;
     std::vector<std::unordered_map<int, State<T>>> bestF;
     std::vector<std::unordered_map<int, State<T>>> bestC;
     std::vector<std::unordered_map<int, State<T>>> bestCS;
     std::vector<std::unordered_map<int, State<T>>> bestM1;
     std::vector<std::unordered_map<int, State<T>>> bestM2;
     std::vector<std::unordered_map<int, State<T>>> bestMulti;
+    std::vector<std::vector<std::unordered_map<int, State<T>>>> speedup;//speedup[j][l][index]
 
     AllTables(std::string rna_seq, int size_) {
         bestN = initi_vec(rna_seq, size_);
-        bestS = initi_vec(rna_seq, size_);
+        bestS = initi_vec_S(rna_seq, size_, SINGLE_MAX_LEN+1);
         bestF = initi_vec(rna_seq, size_);
         bestC = initi_vec(rna_seq, size_);
         bestCS = initi_vec(rna_seq, size_);
         bestM1 = initi_vec(rna_seq, size_);
         bestM2 = initi_vec(rna_seq, size_);
         bestMulti = initi_vec(rna_seq, size_);
+        speedup = initi_vec_S(rna_seq, size_, SINGLE_MAX_LEN+1);//speedup
     }
 
     std::vector<std::unordered_map<int, State<T>>> initi_vec(std::string& rna_seq, int size_){
         std::vector<std::unordered_map<int, State<T>>> seq_tables_(size_);
+        return seq_tables_;
+    }
+    std::vector<std::vector<std::unordered_map<int, State<T>>>> initi_vec_S(std::string& rna_seq, int size_, int len){
+        std::vector<std::vector<std::unordered_map<int, State<T>>>> seq_tables_(size_,std::vector<std::unordered_map<int, State<T>>>(len));
         return seq_tables_;
     }
 
@@ -429,7 +565,7 @@ void initialize(){
             _allowed_pairs[base_G_vec[j]][base_U_vec[i]] = true;
         }
     }
-    
+     
     // Arginine
     xcon_table[Arg][0][BASE("A")][BASE("G_AG1")] = true; //R
     xcon_table[Arg][0][BASE("C")][BASE("G_AG2")] = true; //R
@@ -465,7 +601,7 @@ void initialize(){
 }
 
 //...[i][j]...
-bool IsLegal(std::vector<int>& con_seq, int base_i, int base_i1, int pos_i){
+inline bool IsLegal(std::vector<int>& con_seq, int base_i, int base_i1, int pos_i){
     //j must be i+1
     int amino_ = con_seq[pos_i];
     int pos_i1 = pos_i+1;
@@ -542,10 +678,13 @@ void check_valid_ami(int seq_size, std::string result_seq, std::string& ami_seq)
     }
 }
 
-inline void log_CAI(std::vector<float>& cai_vector, std::vector<float>& log_cai_vector){
+inline void log_CAI(std::vector<double>& cai_vector, std::vector<double>& log_cai_vector){
 
     for(int i = 0; i < cai_vector.size(); i++){
-        log_cai_vector.push_back(logf(cai_vector[i]));
+        if(cai_vector[i] == 0)
+            log_cai_vector.push_back(-999999);
+        else log_cai_vector.push_back(log(cai_vector[i]));// Round the number to three decimal places.
+        //else log_cai_vector.push_back(logf(cai_vector[i]));
     }
 }
 
@@ -606,19 +745,170 @@ inline int getLastExtendedNuc(char amino_ ,std::string codon_){
     return last_nuc;
 }
 
-inline void initialize_CAI_table(std::vector<float> cai_vector_, bool is_derna=false){
-    std::vector<float> cai_vector;
+// inline void Read_CAI_file(std::string cai_file_path){
+//     std::ifstream cai_file(cai_file_path);
+//     if(!cai_file.is_open()){
+//         std::cout<<"Can't open "<<cai_file_path<<"."<<std::endl;
+//         return ;
+//     }
+
+//     std::string line;
+//     bool first_line = true;
+//     while(getline(cai_file, line)){
+//         if(first_line){
+//             first_line = false;
+//             continue;
+//         }
+
+//         std::stringstream ss(line);
+//         std::vector<std::string> row;
+//         std::string cell;
+
+//         while(getline(ss, cell ,',')){
+//             row.push_back(cell);
+//             std::cout<<cell<<",";
+//         }
+//         std::cout<<std::endl;
+
+//         char amino_ = row[1][0];
+//         std::string codon_ = row[0];
+//         int last_nuc = BASE(std::string(1, codon_[2]));
+//         double cai_value_ = std::stod(row[2]);
+//         double cai_value = (cai_value_ == 0)? -999999 : log(cai_value_);
+
+//         if(amino_ == 'R'){
+//             if(codon_ == "AGA")
+//                 last_nuc = BASE("A1");
+//             if(codon_ == "AGG")
+//                 last_nuc = BASE("G1");
+            
+//             if(codon_ == "CGA")
+//                 last_nuc = BASE("A2");
+//             if(codon_ == "CGG")
+//                 last_nuc = BASE("G2");
+//             if(codon_ == "CGC")
+//                 last_nuc = BASE("C");
+//             if(codon_ == "CGU")
+//                 last_nuc = BASE("U");
+//             // {"CGU","R"}, {"CGC","R"}, {"CGA","R"}, {"CGG","R"}, {"AGA","R"}, {"AGG","R"},
+//         }
+//         else if(amino_ == 'L'){
+//             if(codon_ == "CUU")
+//                 last_nuc = BASE("U");
+//             if(codon_ == "CUC")
+//                 last_nuc = BASE("C");
+//             if(codon_ == "CUA")
+//                 last_nuc = BASE("A2");
+//             if(codon_ == "CUG")
+//                 last_nuc = BASE("G2");
+            
+//             if(codon_ == "UUA")
+//                 last_nuc = BASE("A1");
+//             if(codon_ == "UUG")
+//                 last_nuc = BASE("G1");
+//             // {"CUU","L"}, {"CUC","L"}, {"CUA","L"}, {"CUG","L"}, {"UUA","L"}, {"UUG","L"},
+//         }
+//         else if(amino_ == 'S'){
+//             if(codon_ == "UCU")
+//                 last_nuc = BASE("U");
+//             if(codon_ == "UCC")
+//                 last_nuc = BASE("C");
+//             if(codon_ == "UCA")
+//                 last_nuc = BASE("A");
+//             if(codon_ == "UCG")
+//                 last_nuc = BASE("G");
+            
+//             if(codon_ == "AGU")
+//                 last_nuc = BASE("U1");
+//             if(codon_ == "AGC")
+//                 last_nuc = BASE("C1"); 
+//             // {"UCU","S"}, {"UCC","S"}, {"UCA","S"}, {"UCG","S"}, {"AGU","S"}, {"AGC","S"},
+//         }
+//         unweighted_CAIMap[codon_] = cai_value;
+//         CodonSetCAIMap[amino_][last_nuc] = cai_value;
+//     }
+// }
+
+// inline void initialize_CAI_table2(bool is_DN){
+//     for (auto &item : CodonSetCAIMap) {
+//         std::cout<<item.first<<",";
+//         for(auto &item2 : item.second){
+//             std::cout<<item2.first<<","<<item2.second<<std::endl;
+//         }
+//     }
+// }
+
+bool isCSV(const std::string& file_path) {
+    // Check if file_path ends with ".csv"
+    return file_path.size() >= 4 && file_path.substr(file_path.size() - 4) == ".csv";
+}
+
+inline void read_CAI_table_csv(std::string csv_file_name, std::vector<double>& cai_vector_){
+    std::ifstream cai_csv_file(csv_file_name);
+
+     if (!cai_csv_file.is_open()) {
+        std::cerr << "[Error] Cannot open csv file: " << csv_file_name << std::endl;
+        return;
+    }
+
+    std::unordered_map<std::string, float> max_amino_cai_map;
+    std::string line;
+    while (std::getline(cai_csv_file, line)) {
+        std::stringstream ss(line);
+        std::string key1, key2;
+        float value;
+
+        std::getline(ss, key1, ',');  // GCA
+        std::getline(ss, key2, ',');  // A
+        ss >> value;
+
+        cai_table_csv[key1] = value;
+        auto it = max_amino_cai_map.find(key2);
+        if (it == max_amino_cai_map.end()) {
+            max_amino_cai_map[key2] = value;
+        } else {
+            if (value > it->second) {
+                it->second = value;
+            }
+        }
+    }
+
+    cai_csv_file.close();
+
+    // elements in CodonSet
+    for (auto& codon_info : CodonSet) {
+        std::string codon_ = codon_info[1];
+        std::string amino_ = codon_info[0];
+        auto it = cai_table_csv.find(codon_);
+        if (it == cai_table_csv.end()) {
+            std::cout << "[Error] codon " << codon_ << " not found in file: " << csv_file_name << std::endl;
+            continue;  // skip or handle error
+        }
+        double cai_value = ((it->second) / max_amino_cai_map[amino_]);
+        cai_vector_.push_back(cai_value);
+    }
+
+    // // debug: check the items in cai_table_csv
+    // for (const auto& pair : cai_table_csv) {
+    //     std::cout << "Codon: " << pair.first << ", CAI Value: " << pair.second << std::endl;
+    // }
+}
+
+inline void initialize_CAI_table(std::vector<double> cai_vector_, bool is_DN){
+    std::vector<double> cai_vector;
+
     log_CAI(cai_vector_, cai_vector);
+
 
     for (int k = 0; k < CodonSet.size(); ++k) {
         char amino_ = CodonSet[k][0][0];
-
-        if (is_derna && lambda) {
-            if (CodonSetCAIMap_derna.find(amino_) == CodonSetCAIMap_derna.end())
-                CodonSetCAIMap_derna[amino_] = std::unordered_map<int, float>();
+        if (is_DN) {
+            if (CodonSetCAIMap_DN.find(amino_) == CodonSetCAIMap_DN.end())
+                CodonSetCAIMap_DN[amino_] = std::unordered_map<int, double>();
         } else {
             if (CodonSetCAIMap.find(amino_) == CodonSetCAIMap.end())
-                CodonSetCAIMap[amino_] = std::unordered_map<int, int>();
+                CodonSetCAIMap[amino_] = std::unordered_map<int, double>();
+                // CodonSetCAIMap[amino_] = std::unordered_map<int, int>();
         }
     }
 
@@ -674,23 +964,25 @@ inline void initialize_CAI_table(std::vector<float> cai_vector_, bool is_derna=f
             if(codon_ == "AGU")
                 last_nuc = BASE("U1");
             if(codon_ == "AGC")
-                last_nuc = BASE("C1");
+                last_nuc = BASE("C1"); 
             // {"UCU","S"}, {"UCC","S"}, {"UCA","S"}, {"UCG","S"}, {"AGU","S"}, {"AGC","S"},
         }
-        
-        if (lambda && !is_derna) {
-            float weight_ = LDCONST * lambda * cai_vector[i];
-            CodonSetCAIMap[amino_][last_nuc] = int(weight_);
-            CalCAIMap[codon_] = int(weight_);
-        } else if (lambda && is_derna) {
-            float weight_ = (1.0 - lambda) * cai_vector[i];
-            CodonSetCAIMap_derna[amino_][last_nuc] = weight_;
-            CalCAIMap_derna[codon_] = weight_;
-        } else {
-            CodonSetCAIMap[amino_][last_nuc] = 0;
-            CalCAIMap[codon_] = int(LDCONST * cai_vector[i]);
+        if(is_DN){
+            double weight_ = (1-lambda)*cai_vector[i]; //*100
+            CodonSetCAIMap_DN[amino_][last_nuc] = weight_;
+            CalCAIMap_DN[codon_] = weight_;
         }
-    }    
+        else{
+            double weight_ = LDCONST*lambda * cai_vector[i];//*100
+            // CodonSetCAIMap[amino_][last_nuc] = int(weight_);
+            // CalCAIMap[codon_] = int(weight_);
+            CodonSetCAIMap[amino_][last_nuc] = weight_;
+            CalCAIMap[codon_] = weight_;
+
+        }
+        unweighted_CAIMap[codon_] = cai_vector[i];
+        // std::cout << "[Debug] Codon: " << codon_ << ", CAI Value: " << cai_vector[i] << std::endl;
+    }
 }
 
 void check_ami_solution(std::string ami_seq, std::string rna_solution){
@@ -706,32 +998,110 @@ void check_ami_solution(std::string ami_seq, std::string rna_solution){
     }
 }
 
-inline int GetCAIScore(const std::string& rna_solution){
-    int score = 0;
-    for (int i = 0; i <= rna_solution.size() - 3; i += 3){
-        std::string codon = rna_solution.substr(i, 3);
-        score = score + CalCAIMap[codon];
+template<typename T>
+T GetCAIScore(const std::string& rna_solution,bool is_DN){
+    T score = 0;
+    if(is_DN){
+        for (int i = 0; i <= rna_solution.size() - 3; i += 3){
+            std::string codon = rna_solution.substr(i, 3);
+            score = score + CalCAIMap_DN[codon];
+        }
     }
+    else{
+        for (int i = 0; i <= rna_solution.size() - 3; i += 3){
+            std::string codon = rna_solution.substr(i, 3);
+            score = score + CalCAIMap[codon];
+        }
+    }
+    
     return score;
 }
 
-inline float GetCAIScore_derna(const std::string& rna_solution){
-    float score = 0;
+double GetUnweghtedCAIScore(const std::string& rna_solution){
+    double score = 0;
     for (int i = 0; i <= rna_solution.size() - 3; i += 3){
         std::string codon = rna_solution.substr(i, 3);
-        score = score + CalCAIMap_derna[codon];
+        score = score + unweighted_CAIMap[codon];
     }
     return score;
 }
+double round_up(double x){
+    return round(x*1000000.0)/1000000.0;
+}
 
-inline void PrintInfo(std::string file, int beamsize, std::string cai_file_path, float lambda, std::string objective){
+int counter = 0;
+double percent = 0;
+std::string bar = "                                                 ";
+void Processing(int size_){
+    counter ++;
+    double real_precent = double(counter)/double(size_);
+    if(real_precent >= percent){
+        percent += 0.02;
+        bar = "=" + bar;
+        bar = bar.substr(0,50);
+    }
+    std::cout << std::fixed<<std::setw(70)<< std::left<<("\rProcessing: [" + bar + "]  " + std::to_string(int(real_precent*100))) + "%"<<std::flush;
+    
+    if(size_-1 == counter){
+        std::cout <<std::fixed<<std::setw(70)<< std::left<<("\rProcessing: [" + bar + "]  100%")<<std::endl;
+         counter = 0;
+         percent = 0;
+         bar = "                                                                                                    ";
+    }
+       
+}
+
+inline void PrintInfo(std::string output_txt,std::string output_csv,std::string file, int beamsize, std::string cai_file_path, double lambda, std::string objective, bool pareto, bool is_rna_file,bool output){
     // std out information
-    std::cout << "Amino acid file: " << file << std::endl;
-    std::cout << "Beam size: " << beamsize << std::endl;
-    std::cout << "Codon usage table: " << cai_file_path << std::endl;
-    if (objective == "DN") {
-        std::cout << "DERNA Lambda: " << lambda << std::endl;
-    } else {
-        std::cout << "Lambda: " << lambda << std::endl;
+    std::ofstream outputfile(output_txt);
+    std::ofstream outputcsv(output_csv);
+
+    /*AA file*/
+    if(!is_rna_file){
+        if(output) std::cout << "Amino acid file: " << file << std::endl;
+        outputfile << "Amino acid file: " << file << std::endl;
     }
+    else{
+        if(output) std::cout << "RNA file: " << file << std::endl;
+        outputfile << "Amino acid file: " << file << std::endl;
+    }
+
+    /*CAI file*/
+    if(output) std::cout << "Codon usage table: " << cai_file_path << std::endl;
+    outputfile << "Codon usage table: " << cai_file_path << std::endl;
+
+    /*initialize CVS file*/
+    outputcsv <<"lambda,MFE,CAI"<<std::endl;
+
+    /*OJ function*/
+    if (objective == "DN") {
+        if(output)std::cout << "Objective function: DERNA" << std::endl;
+        outputfile << "Objective function: DERNA" << std::endl;
+    } else {
+        if(output)std::cout << "Objective function: LinearDesign" << std::endl;
+        outputfile << "Objective function: LinearDesign" << std::endl;
+    }
+    if(pareto){
+        if(output)std::cout << "Search mode: Pareto-optimal search" << std::endl;
+        outputfile << "Search mode: Pareto-optimal search" << std::endl;
+    }
+    else{
+        if(output){
+            if(beamsize != 0)
+                std::cout << "Search mode: Beam search" << std::endl;
+            else std::cout << "Search mode: Exact search" << std::endl;
+        }
+        if(beamsize != 0)
+            outputfile << "Search mode: Beam search" << std::endl;
+        else outputfile << "Search mode: Exact search" << std::endl;
+    }
+    if(output){
+        if(beamsize != 0) 
+            std::cout << "Beam size: " << beamsize << std::endl;
+    } 
+    if(beamsize != 0) 
+        outputfile << "Beam size: " << beamsize << std::endl;
+    // if(output)std::cout << "------------------------------------------ START ------------------------------------------" << std::endl;
+    // outputfile << "------------------------------------------ START ------------------------------------------" << std::endl;
+
 }
