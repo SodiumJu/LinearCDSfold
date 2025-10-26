@@ -2,6 +2,11 @@
 
 LinearCDSfold is a tool for designing a coding sequence (CDS) by jointly optimizing its secondary structure stability and codon usage.
 
+To see LinearCDSfold (version 1.0), please go to
+[LinearCDSfold v1](https://github.com/SodiumJu/LinearCDSfold/tree/9ba92cd827600db3618cbaf094f25424d90de3ed)
+or [download this version as ZIP](https://github.com/SodiumJu/LinearCDSfold/archive/9ba92cd827600db3618cbaf094f25424d90de3ed.zip)
+
+
 ## To Compile:
 Run the following command to compile LinearCDSfold.
 
@@ -10,10 +15,32 @@ make
 ```
 
 ## To Run:
-Use the following command to run LinearCDSfold.
+To run **LinearCDSfold**, use the following command:
+
+```bash
+./LinearCDSfold [OPTIONS] SEQFILE
+```
+
+Example:
 
 ```
-./LinearCDSfold [OPTIONS] SEQFILE
+> ./LinearCDSfold -b 100 -l 2 -txt P15421_beam.txt -csv P15421_beam.csv example/P15421.fasta
+```
+Output:
+```
+Amino acid file: example/P15421.fasta
+Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
+Objective function: LinearDesign
+Search mode: Beam search
+Beam size: 100
+Lambda: 2.000
+Processing: [==================================================]  100%
+Coding sequence and its secondary structure:
+AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGAAUUGUGAGCAUUUCCGCCAGCAGCACCACAGGGGUGGCCAUGCAUACCAGCACCAGCAGUAGCGUGACCAAGAGCUACAUCUCCAGCCAGACCAACGGCAUCACCUUGAUCAAUUGGUGGGCCAUGGCCCGCGUGAUUUUCGAGGUGAUGCUGGUGGUGGUGGGGAUGAUCAUCUUGAUCAGCUACUGCAUCCGC
+(((((((((.....((((((((((.((((((((.((((((.((....)).)))))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((..((((.((((((....))))))..)))).)))))))))))))).))))))))))))))....))))).)))))))))))....))
+Folding free energy: -130.300 kcal/mol
+CAI: 0.924
+total runtime: 0.287 s
 ```
 
 ### SEQFILE:
@@ -37,15 +64,30 @@ MYGKIIFVLLLSGIVSISASSTTGVAMHTSTSSSVTKSYISSQTNGITLINWWAMARVIFEVMLVVVGMIILISYCIR
 -cai <CAIFILE>
 ```
 
-`CAIFILE` is a file of codon usage frequencies, which contains the relative adaptiveness values of all the 61 codons (without stop codons) arranged in the following order: 
+`CAIFILE` is a CSV file containing codon usage frequencies.
+Each entry lists a codon triplet, its corresponding amino acid, and the frequency value (as a fraction).
 
-`GCU, GCC, GCA, GCG, CGU, CGC, CGA, CGG, AGA, AGG, AAU, AAC, GAU, GAC, UGU, UGC, CAA, CAG, GAA, GAG, GGU, GGC, GGA, GGG, CAU, CAC, AUG, AUU, AUC, AUA, CUU, CUC, CUA, CUG, UUA, UUG, AAA, AAG, UUU, UUC, CCU, CCC, CCA, CCG, UCU, UCC, UCA, UCG, AGU, AGC, ACU, ACC, ACA, ACG, UGG, UAU, UAC, GUU, GUC, GUA, GUG`
+Example files:
+- `cai_example/codon_usage_freq_table_human_LinearDesign.csv`
+- `cai_example/codon_usage_freq_table_yeast_LinearDesign.csv`.
 
-The following is an example of `CAIFILE`.
+File format: `[triplet], [amino acid], [frequency fraction]`
 
-`0.67, 1.00, 0.57, 0.27, 0.37, 0.86, 0.51, 0.94, 1.00, 0.98, 0.89, 1.00, 0.87, 1.00, 0.84, 1.00, 0.36, 1.00, 0.73, 1.00, 0.48, 1.00, 0.74, 0.74, 0.72, 1.00, 1.00, 0.77, 1.00, 0.36, 0.33, 0.49, 0.18, 1.00, 0.19, 0.33, 0.77, 1.00, 0.87, 1.00, 0.89, 1.00, 0.86, 0.35, 0.78, 0.91, 0.63, 0.23, 0.62, 1.00, 0.69, 1.00, 0.80, 0.32, 1.00, 0.80, 1.00, 0.39, 0.51, 0.25, 1.00`
+Example:
+```
+#,,
+GCU,A,0.26
+GCC,A,0.4
+GCA,A,0.23
+GCG,A,0.11
+UGU,C,0.45
+UGC,C,0.55
+GAU,D,0.46
+GAC,D,0.54
+...
+```
 
-**Note:** The default value of `CAIFILE` is set to `human_relative_adaptiveness.txt`.
+**Note:** The default value of `CAIFILE` is set to `cai_example/codon_usage_freq_table_human_LinearDesign.csv`.
 
 ```
 -o <OBJECTIVE>
@@ -112,17 +154,20 @@ Conversely, when the objective function defined by DERNA is utilized (i.e., `OBJ
 
 ```
 > ./LinearCDSfold -l 2 -txt P15421.txt -csv P15421.csv example/P15421.fasta
+```
+Output:
+```
 Amino acid file: example/P15421.fasta
-Codon usage table: human_relative_adaptiveness.txt
+Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
 Objective function: LinearDesign
-Search mode: Exact search 
+Search mode: Exact search
 Lambda: 2.000
 Processing: [==================================================]  100%
 Coding sequence and its secondary structure:
-AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGGAUCGUGUCGAUCUCCGCCAGCAGCACCACAGGGGUGGCCAUGCAUACCUCUACCAGCAGUAGCGUGACCAAGAGCUACAUCUCCAGCCAGACCAACGGCAUCACCUUGAUCAACUGGUGGGCCAUGGCCCGCGUGAUCUUCGAGGUGAUGCUGGUGGUGGUGGGGAUGAUCAUCUUGAUCAGCUACUGCAUUAGA
-(((((((((.....((((((((((.((((((((.(((((((((...))))).)))))))))))).)))))))))))))))))))...((((...((((((((.(((.(((((....((((((((.((..((((.((((((((((((((.......((((((....)))))).......)))))))))))))).))))))))))))))....))))).)))))))))))..))))
-Folding free energy: -133.500 kcal/mol
-CAI: 0.916
+AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGGAUCGUGUCGAUCUCCGCCAGCAGCACCACAGGGGUGGCCAUGCAUACCAGCACCAGCAGUAGCGUGACCAAGAGCUACAUCUCCAGCCAGACCAACGGCAUCACCUUGAUCAACUGGUGGGCCAUGGCCCGCGUGAUCUUCGAGGUGAUGCUGGUGGUGGUGGGGAUGAUCAUCUUGAUCAGCUACUGCAUCCGC
+(((((((((.....((((((((((.((((((((.(((((((((...))))).)))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((.......((((((....)))))).......)))))))))))))).))))))))))))))....))))).)))))))))))....))
+Folding free energy: -132.600 kcal/mol
+CAI: 0.919
 Total runtime: 2.898 s
 ```
 
@@ -130,18 +175,21 @@ Total runtime: 2.898 s
 
 ```
 > ./LinearCDSfold -b 100 -l 2 -txt P15421_beam.txt -csv P15421_beam.csv example/P15421.fasta
+```
+Output:
+```
 Amino acid file: example/P15421.fasta
-Codon usage table: human_relative_adaptiveness.txt
+Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
 Objective function: LinearDesign
 Search mode: Beam search
 Beam size: 100
 Lambda: 2.000
 Processing: [==================================================]  100%
 Coding sequence and its secondary structure:
-AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGAAUUGUGAGCAUUUCCGCCAGCAGCACCACAGGGGUGGCCAUGCAUACCUCUACCAGCAGUAGCGUGACCAAGAGCUACAUCUCCAGCCAGACCAACGGCAUCACCUUGAUCAAUUGGUGGGCCAUGGCCCGCGUGAUUUUCGAGGUGAUGCUGGUGGUGGUGGGGAUGAUCAUCUUGAUCAGCUACUGCAUUAGA
-(((((((((.....((((((((((.((((((((.((((((.((....)).)))))))))))))).)))))))))))))))))))...((((...((((((((.(((.(((((....((((((((.((..((((.((((((((((((((..((((.((((((....))))))..)))).)))))))))))))).))))))))))))))....))))).)))))))))))..))))
-Folding free energy: -131.200 kcal/mol
-CAI: 0.922
+AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGAAUUGUGAGCAUUUCCGCCAGCAGCACCACAGGGGUGGCCAUGCAUACCAGCACCAGCAGUAGCGUGACCAAGAGCUACAUCUCCAGCCAGACCAACGGCAUCACCUUGAUCAAUUGGUGGGCCAUGGCCCGCGUGAUUUUCGAGGUGAUGCUGGUGGUGGUGGGGAUGAUCAUCUUGAUCAGCUACUGCAUCCGC
+(((((((((.....((((((((((.((((((((.((((((.((....)).)))))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((..((((.((((((....))))))..)))).)))))))))))))).))))))))))))))....))))).)))))))))))....))
+Folding free energy: -130.300 kcal/mol
+CAI: 0.924
 total runtime: 0.287 s
 ```
 
@@ -149,8 +197,11 @@ total runtime: 0.287 s
 
 ```
 > ./LinearCDSfold -o DN -b 100 -l 0.001 -txt P15421_beam_DN.txt -csv P15421_beam_DN.csv example/P15421.fasta
+```
+Output:
+```
 Amino acid file: example/P15421.fasta
-Codon usage table: human_relative_adaptiveness.txt
+Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
 Objective function: DERNA
 Search mode: Beam search
 Beam size: 100
@@ -160,7 +211,7 @@ Coding sequence and its secondary structure:
 AUGUACGGCAAGAUCAUCUUCGUGCUGCUGCUGAGCGGCAUCGUGUCCAUCAGCGCCAGCAGCACCACCGGCGUGGCCAUGCACACCUCCACCAGCAGCAGCGUGACCAAGAGCUACAUCAGCUCUCAGACCAAUGGCAUCACCCUGAUCAACUGGUGGGCCAUGGCCAGGGUGAUCUUCGAGGUGAUGCUGGUGGUGGUGGGCAUGAUCAUCCUGAUCAGCUACUGCAUCAGG
 ..((((((..(((...)))))))))((((((...))))))((((((((((((.((((((((.((((.(((.(.((((((((......((((((((...(((.(((((((((((((.....))))))........)))..)))).))).....)))))))).)))))))).).))......).)))).)))))))).))))))))))))....(((((((((...))).))))))
 Folding free energy: -103.100 kcal/mol
-CAI: 0.992
+CAI: 0.991
 total runtime: 0.294 s
 ```
 

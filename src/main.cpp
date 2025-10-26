@@ -167,16 +167,16 @@ int main(int argc, char** argv){
         threshold2 = stof(threshold2_);
     
     /*cai file*/
-    std::string cai_file_path = "human_relative_adaptiveness.txt";//default cai file (human)
+    std::string cai_file_path = "cai_example/codon_usage_freq_table_human_LinearDesign.csv";//default cai file (human)
     const std::string &cai_file_str = input.getCmdOption("-cai");
     if (!cai_file_str.empty())
         cai_file_path = cai_file_str;
 
     if (isCSV(cai_file_path)){
-        std::cout << "[Debug] Reading CAI table from CSV file: " << cai_file_path << std::endl;
+        // std::cout << "[Debug] Reading CAI table from CSV file: " << cai_file_path << std::endl;
         read_CAI_table_csv(cai_file_path, cai_vector);
     } else {
-
+        // in here, the input cai txt file must be relative cai values for codons in CodonSet order
         cai_file.open(cai_file_path);
         if (cai_file.is_open()){
             std::string line;
