@@ -167,7 +167,7 @@ int main(int argc, char** argv){
         threshold2 = stof(threshold2_);
     
     /*cai file*/
-    std::string cai_file_path = "cai_example/codon_usage_freq_table_human_LinearDesign.csv";//default cai file (human)
+    std::string cai_file_path = "codon_usage_freq_table_human.csv";//default cai file (human)
     const std::string &cai_file_str = input.getCmdOption("-cai");
     if (!cai_file_str.empty())
         cai_file_path = cai_file_str;

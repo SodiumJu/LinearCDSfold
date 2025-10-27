@@ -29,7 +29,7 @@ Example:
 Output:
 ```
 Amino acid file: example/P15421.fasta
-Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
+Codon usage table: codon_usage_freq_table_human.csv
 Objective function: LinearDesign
 Search mode: Beam search
 Beam size: 100
@@ -68,8 +68,8 @@ MYGKIIFVLLLSGIVSISASSTTGVAMHTSTSSSVTKSYISSQTNGITLINWWAMARVIFEVMLVVVGMIILISYCIR
 Each entry lists a codon triplet, its corresponding amino acid, and the frequency value (as a fraction).
 
 Example files:
-- `cai_example/codon_usage_freq_table_human_LinearDesign.csv`
-- `cai_example/codon_usage_freq_table_yeast_LinearDesign.csv`.
+- `codon_usage_freq_table_human.csv`
+- `codon_usage_freq_table_yeast.csv`.
 
 File format: `[triplet], [amino acid], [frequency fraction]`
 
@@ -87,7 +87,7 @@ GAC,D,0.54
 ...
 ```
 
-**Note:** The default value of `CAIFILE` is set to `cai_example/codon_usage_freq_table_human_LinearDesign.csv`.
+**Note:** The default value of `CAIFILE` is set to `codon_usage_freq_table_human.csv`.
 
 ```
 -o <OBJECTIVE>
@@ -158,7 +158,7 @@ Conversely, when the objective function defined by DERNA is utilized (i.e., `OBJ
 Output:
 ```
 Amino acid file: example/P15421.fasta
-Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
+Codon usage table: codon_usage_freq_table_human.csv
 Objective function: LinearDesign
 Search mode: Exact search
 Lambda: 2.000
@@ -179,7 +179,7 @@ Total runtime: 2.898 s
 Output:
 ```
 Amino acid file: example/P15421.fasta
-Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
+Codon usage table: codon_usage_freq_table_human.csv
 Objective function: LinearDesign
 Search mode: Beam search
 Beam size: 100
@@ -201,7 +201,7 @@ total runtime: 0.287 s
 Output:
 ```
 Amino acid file: example/P15421.fasta
-Codon usage table: cai_example/codon_usage_freq_table_human_LinearDesign.csv
+Codon usage table: codon_usage_freq_table_human.csv
 Objective function: DERNA
 Search mode: Beam search
 Beam size: 100
