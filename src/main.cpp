@@ -46,7 +46,7 @@ int main(int argc, char** argv){
     
 
     InputParser input(argc, argv);
-    if(input.cmdOptionExists("-h")){
+    if(input.cmdOptionExists("-h") || input.cmdOptionExists("--h") || input.cmdOptionExists("-help") || input.cmdOptionExists("--help")){
         PrintHelp();
         std::cout << std::endl;
         return 0;
@@ -93,7 +93,7 @@ int main(int argc, char** argv){
     show_score = FindOption(argc, argv, "-score");
     
     /*Objective function*/
-    const std::string &objective_ = input.getCmdOption("-o");
+    std::string objective_ = input.getCmdOption("-O");
     if (!objective_.empty()) {
         objective = objective_;
         if(objective == "DN") lambda = 1;//change default lambda 
@@ -143,32 +143,38 @@ int main(int argc, char** argv){
     }
 
     /*beam search*/
-    const std::string &beamsize_ = input.getCmdOption("-b");
+    std::string beamsize_ = input.getCmdOption("-b");
     if (!beamsize_.empty())
         beamsize = stoi(beamsize_);
 
     /*pareto optimal solution*/
-    bool pareto_ = FindOption(argc, argv, "-p");
+    bool pareto_ = FindOption(argc, argv, "-P");
     if(pareto_)
         pareto = true;
 
 
     /*lambda*/
-    const std::string &lambda_ = input.getCmdOption("-l");
+    std::string lambda_ = input.getCmdOption("-l");
     if (!lambda_.empty())  
         lambda = stof(lambda_);
 
     /*threshold*/
-    const std::string &threshold1_ = input.getCmdOption("-t1");
-    if (!threshold1_.empty())  
+    std::string threshold1_ = input.getCmdOption("-t");
+    if (threshold1_ == "") {
+        threshold1_ = input.getCmdOption("--tau1");
+    }
+    if (!threshold1_.empty())
         threshold1 = stof(threshold1_);
-    const std::string &threshold2_ = input.getCmdOption("-t2");
+    std::string threshold2_ = input.getCmdOption("-u");
+    if (threshold2_ == "") {
+        threshold2_ = input.getCmdOption("--tau2");
+    }
     if (!threshold2_.empty())  
         threshold2 = stof(threshold2_);
     
     /*cai file*/
     std::string cai_file_path = "codon_usage_freq_table_human.csv";//default cai file (human)
-    const std::string &cai_file_str = input.getCmdOption("-cai");
+    std::string cai_file_str = input.getCmdOption("-c");
     if (!cai_file_str.empty())
         cai_file_path = cai_file_str;
 
@@ -202,12 +208,12 @@ int main(int argc, char** argv){
     //Reading output file name
     std::string output_txt;
     std::string output_csv;
-    if(input.cmdOptionExists("-txt"))
-        output_txt = input.getCmdOption("-txt");//edited
+    if(input.cmdOptionExists("-o"))
+        output_txt = input.getCmdOption("-o");//edited
     else output_txt = "result.txt";
 
-    if(input.cmdOptionExists("-csv"))
-        output_csv = input.getCmdOption("-csv");//edited
+    if(input.cmdOptionExists("-f"))
+        output_csv = input.getCmdOption("-f");//edited
     else output_csv = "result.csv";
 
     if(pareto){

@@ -164,14 +164,13 @@ class InputParser{
                 this->tokens.push_back(std::string(argv[i]));
         }
 
-        const std::string& getCmdOption(const std::string &option) const{
+        std::string getCmdOption(const std::string &option) const{
             std::vector<std::string>::const_iterator itr;
             itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
             if (itr != this->tokens.end() && ++itr != this->tokens.end()){
                 return *itr;
             }
-            static const std::string empty_string("");
-            return empty_string;
+            return "";
         }
 
         bool cmdOptionExists(const std::string &option) const{
@@ -196,7 +195,7 @@ void PrintHelp(){
           << "         where SEQFILE is an amino acid sequence file in FASTA format.\n"
           << "\n"
           << "OPTIONS:\n"
-          << "  -cai <CAIFILE>:\n"
+          << "  -c <CAIFILE>:\n"
           << "         CAIFILE is a file of codon usage frequencies, which contains the relative\n"
           << "         adaptiveness values of all the 64 codons, where the default of CAIFILE is\n"
           << "         yeast_relative_adaptiveness.txt.\n"
@@ -211,7 +210,7 @@ void PrintHelp(){
           << "         LAMBDA is 3. If LAMBDA is 0, then only MFE is considered in the joint optimization\n"
           << "         objective; otherwise, both MFE and CAI are considered and the larger the value of\n"
           << "         LAMBDA, the greater the contribution of CAI.\n"
-          << "  -o <OBJECTIVE>:\n"
+          << "  -O <OBJECTIVE>:\n"
           << "         OBJECTIVE represents the joint objective function for optimizing\n"
           << "         both MFE (minimum free energy) and CAI (Codon Adaptation Index).\n"
           << "         It can be set to either LD or DN. When OBJECTIVE is LD, the objective function\n"
@@ -219,9 +218,27 @@ void PrintHelp(){
           << "         where l is the length of the input amino acid sequence). Conversely, if OBJECTIVE is DN,\n"
           << "         the objective function defined by DERNA is utilized (i.e, LAMBDA * MFE - (1 - LAMBDA) * l * log CAI).\n"
           << "         The default value of OBJECTIVE is set to LD."
-          << "  -p <PARETO>:\n"
+          << "  -P <PARETO>:\n"
           << "         PARETO is a parameter to control an auto-search function. The auto-search funtion can\n"
-          << "         generate a set of pareto-optimal solutions automatically. It can be set to either 1 or 0.\n";
+          << "         generate a set of pareto-optimal solutions automatically. It can be set to either 1 or 0.\n"
+          << "  -t <tau1> or --tau1 <TAU1>:\n"
+          << "         TAU1 is a termination threshold used by LinearCDSfold when Pareto-optimal search is enabled\n"
+          << "         (i.e., the -P option is specified). Its default value is 0.0025. In principle, the smaller the\n"
+          << "         value of TAU1, the more Pareto-optimal CDSs can be generated, and the longer the required runtime.\n"
+          << "  -u <TAU2> or --tau2 <TAU2>:\n"
+          << "         TAU2 is another termination threshold used by LinearCDSfold when Pareto-optimal search is enabled\n"
+          << "         (i.e., the -P option is specified). Essentially, TAU2 is used to explore Pareto-optimal CDSs\n"
+          << "         that are generated using LAMBDA values smaller than TAU1. Therefore, the value of TAU2 should be\n"
+          << "         smaller than that of TAU1. By default, it is set to 0.00075. The smaller the value of TAU2, the more\n"
+          << "         Pareto-optimal CDSs can be generated, and the longer the required runtime.\n"
+          << "  -o <FILE_NAME>:\n"
+          << "         The -o (lowercase letter o) parameter specifies the output file name. The specified file\n"
+          << "         FILE_NAME will contain the detailed results from LinearCDSfold in plain text format. If not specified,\n"
+          << "         the default is result.txt.\n"
+          << "  -f <FILE_NAME>:\n"
+          << "         The -f parameter specifies the output file name. The specified file FILE_NAME will contain only\n"
+          << "         the MFE and CAI results returned by LinearCDSfold for each LAMBDA value in CSV format. If not specified,\n"
+          << "         the default is result.csv.\n";
 
 }
 
