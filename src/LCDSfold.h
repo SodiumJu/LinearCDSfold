@@ -2552,8 +2552,8 @@ std::vector<pair<T,T>> result_output(AllTables<T> &alltables,string& rna_seq, ve
     std::cout << "CAI: " << cai_value << std::endl;
     outputfile << "CAI: " <<  cai_value << std::endl;
 
-    std::cout << "total runtime: " << TimeSpend << " s" << std::endl;
-    outputfile <<  "total runtime: " << TimeSpend << " s" << std::endl;
+    std::cout << "Total runtime: " << TimeSpend << " s" << std::endl;
+    outputfile <<  "Total runtime: " << TimeSpend << " s" << std::endl;
 
     // std::cout << "======================================================================================================" << std::endl;
     // outputfile << "======================================================================================================" << std::endl;

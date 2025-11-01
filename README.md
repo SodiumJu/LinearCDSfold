@@ -144,7 +144,7 @@ AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGGAUCGUGUCGAUCUCCGCCAGCAGCACCACAGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.(((((((((...))))).)))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((.......((((((....)))))).......)))))))))))))).))))))))))))))....))))).)))))))))))....))
 Folding free energy: -132.600 kcal/mol
 CAI: 0.919
-total runtime: 12.034 s
+Total runtime: 12.034 s
 ```
 
 ### Exact search using DERNA objective function
@@ -167,7 +167,7 @@ AUGUAUGGCAAAAUCAUCUUCGUCUUGCUGCUCUCCGGGAUCGUAUCGAUCUCGGCGAGCAGCACGACGGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.(((((((((...))))))))).)))))))).)))))))))))))))))))((((((....((((((((.(((.((((((((((.(((((((((.(((((.((((((((((((((.((((((((((((....)))))).)))))))))))))))))))).)))))))))))))))))))))))))))))))))))))))))
 Folding free energy: -148.700 kcal/mol
 CAI: 0.697
-total runtime: 12.044 s
+Total runtime: 12.044 s
 ```
 
 ### Beam search using LinearDesign objective function
@@ -191,7 +191,7 @@ AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGAAUUGUGAGCAUUUCCGCCAGCAGCACCACAGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.((((((.((....)).)))))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((..((((.((((((....))))))..)))).)))))))))))))).))))))))))))))....))))).)))))))))))....))
 Folding free energy: -130.300 kcal/mol
 CAI: 0.924
-total runtime: 0.865 s
+Total runtime: 0.865 s
 ```
 
 ### Beam search using DERNA objective function
@@ -215,7 +215,7 @@ AUGUACGGCAAGAUCAUCUUCGUGCUGCUGCUGAGCGGCAUCGUGUCCAUCAGCGCCAGCAGCACCACCGGCGUGGCCAU
 ..((((((..(((...)))))))))((((((...))))))((((((((((((.((((((((.((((.(((.(.((((((((......((((((((...(((.(((((((((((((.....))))))........)))..)))).))).....)))))))).)))))))).).))......).)))).)))))))).))))))))))))....(((((((((...))).))))))
 Folding free energy: -103.100 kcal/mol
 CAI: 0.991
-total runtime: 0.879 s
+Total runtime: 0.879 s
 ```
 
 ### Pareto-optimal search using default termination thresholds
