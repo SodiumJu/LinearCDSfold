@@ -142,15 +142,29 @@ int main(int argc, char** argv){
         }
     }
 
+    /*switch mode*/
+    bool use_beam_pruning = false;
+    std::string mode_ = input.getCmdOption("-m");
+    if (mode_.empty()) {
+        mode_ = input.getCmdOption("--mode");
+    }
+    if (mode_.empty() || mode_ == "exact" || mode_ == "Exact") {
+        beamsize = 0;
+    } else if (mode_ == "beam" || mode_ == "Beam") {
+        use_beam_pruning = true;
+        beamsize = 500; // default beam size
+        // beamsize will be set later based on -b option
+    } else if (mode_ == "pareto" || mode_ == "Pareto") {
+        pareto = true;
+    } else {
+        std::cerr << "Error: SEARCH_MODE " << mode_ << " is not recognized." << std::endl;
+        return 0;
+    }
+
     /*beam search*/
     std::string beamsize_ = input.getCmdOption("-b");
-    if (!beamsize_.empty())
+    if (!beamsize_.empty() && use_beam_pruning)
         beamsize = stoi(beamsize_);
-
-    /*pareto optimal solution*/
-    bool pareto_ = FindOption(argc, argv, "-P");
-    if(pareto_)
-        pareto = true;
 
 
     /*lambda*/
