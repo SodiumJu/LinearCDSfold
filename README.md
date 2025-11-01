@@ -96,19 +96,19 @@ If no mode is specified, LinearCDSfold defaults to `exact` search mode.
 -b <BEAM_SIZE>
 ```
 
-`BEAM_SIZE` is a positive integer that specifies the beam size used by LinearCDSfold during beam search (i.e., `-m 2` is specified) and its default value is `500`.
+`BEAM_SIZE` is a positive integer that specifies the beam size used by LinearCDSfold during beam search (i.e., `-m beam` is specified) and its default value is `500`.
 
 ```
 -t <TAU1> or --tau1 <TAU1>
 ```
 
-`TAU1` is a termination threshold used by LinearCDSfold when Pareto-optimal search is enabled (i.e., when `-m 3` is specified). Its default value is `0.0025`. In general, smaller values of `TAU1` result in more Pareto-optimal CDSs being generated, at the cost of longer runtime.
+`TAU1` is a termination threshold used by LinearCDSfold when Pareto-optimal search is enabled (i.e., when `-m pareto` is specified). Its default value is `0.0025`. In general, smaller values of `TAU1` result in more Pareto-optimal CDSs being generated, at the cost of longer runtime.
 
 ```
 -u <TAU2> or --tau2 <TAU2>
 ```
 
-`TAU2` is another termination threshold used by LinearCDSfold when Pareto-optimal search is enabled (i.e., when `-m 3` is specified). Essentially, `TAU2` is used to explore Pareto-optimal CDSs that are generated using `LAMBDA` values smaller than `TAU1`. Therefore, the value of `TAU2` should be smaller than that of `TAU1`. By default, it is set to `0.00075`. Smaller values of `TAU2` allow more Pareto-optimal CDSs to be generated, but increase runtime.
+`TAU2` is another termination threshold used by LinearCDSfold when Pareto-optimal search is enabled (i.e., when `-m pareto` is specified). Essentially, `TAU2` is used to explore Pareto-optimal CDSs that are generated using `LAMBDA` values smaller than `TAU1`. Therefore, the value of `TAU2` should be smaller than that of `TAU1`. By default, it is set to `0.00075`. Smaller values of `TAU2` allow more Pareto-optimal CDSs to be generated, but increase runtime.
 
 ```
 -o <FILE_NAME>
@@ -144,7 +144,7 @@ AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGGAUCGUGUCGAUCUCCGCCAGCAGCACCACAGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.(((((((((...))))).)))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((.......((((((....)))))).......)))))))))))))).))))))))))))))....))))).)))))))))))....))
 Folding free energy: -132.600 kcal/mol
 CAI: 0.919
-Total runtime: 2.898 s
+total runtime: 12.034 s
 ```
 
 ### Exact search using DERNA objective function
@@ -163,11 +163,11 @@ Search mode: Exact search
 Lambda: 2.000
 Processing: [==================================================]  100%
 Coding sequence and its secondary structure:
-AUGUAUGGCAAAAUCAUCUUCGUCUUGCUGCUCUCGGGGAUCGUAUCGAUCUCCGCGAGCAGCACGACGGGGGUGGCCAUGCAUACGAGUACGAGCAGUAGCGUGACUAAGAGUUAUAUAUCCUCACAGACCAACGGCAUCACCUUGAUAAAUUGGUGGGCGAUGGCCCGCGUAAUUUUCGAGGUGAUGCUGGUGGUCGUGGGGAUGAUAAUUCUUAUCAGCUACUGCAUUCGU
+AUGUAUGGCAAAAUCAUCUUCGUCUUGCUGCUCUCCGGGAUCGUAUCGAUCUCGGCGAGCAGCACGACGGGGGUGGCCAUGCAUACGAGUACGAGCAGUAGCGUGACUAAGAGUUAUAUAUCCUCACAGACCAACGGCAUCACCUUGAUAAAUUGGUGGGCGAUGGCCCGCGUAAUUUUCGAGGUGAUGCUGGUGGUCGUGGGGAUGAUAAUUCUUAUCAGCUACUGCAUUCGU
 (((((((((.....((((((((((.((((((((.(((((((((...))))))))).)))))))).)))))))))))))))))))((((((....((((((((.(((.((((((((((.(((((((((.(((((.((((((((((((((.((((((((((((....)))))).)))))))))))))))))))).)))))))))))))))))))))))))))))))))))))))))
 Folding free energy: -148.700 kcal/mol
 CAI: 0.697
-Total runtime: 7.395 s
+total runtime: 12.044 s
 ```
 
 ### Beam search using LinearDesign objective function
@@ -191,7 +191,7 @@ AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGAAUUGUGAGCAUUUCCGCCAGCAGCACCACAGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.((((((.((....)).)))))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((..((((.((((((....))))))..)))).)))))))))))))).))))))))))))))....))))).)))))))))))....))
 Folding free energy: -130.300 kcal/mol
 CAI: 0.924
-Total runtime: 0.287 s
+total runtime: 0.865 s
 ```
 
 ### Beam search using DERNA objective function
@@ -215,7 +215,7 @@ AUGUACGGCAAGAUCAUCUUCGUGCUGCUGCUGAGCGGCAUCGUGUCCAUCAGCGCCAGCAGCACCACCGGCGUGGCCAU
 ..((((((..(((...)))))))))((((((...))))))((((((((((((.((((((((.((((.(((.(.((((((((......((((((((...(((.(((((((((((((.....))))))........)))..)))).))).....)))))))).)))))))).).))......).)))).)))))))).))))))))))))....(((((((((...))).))))))
 Folding free energy: -103.100 kcal/mol
 CAI: 0.991
-Total runtime: 0.294 s
+total runtime: 0.879 s
 ```
 
 ### Pareto-optimal search using default termination thresholds
