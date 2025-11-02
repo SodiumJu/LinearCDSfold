@@ -144,16 +144,16 @@ AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGGAUCGUGUCGAUCUCCGCCAGCAGCACCACAGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.(((((((((...))))).)))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((.......((((((....)))))).......)))))))))))))).))))))))))))))....))))).)))))))))))....))
 Folding free energy: -132.600 kcal/mol
 CAI: 0.919
-Total runtime: 12.034 s
+Total runtime: 3.296 s
 ```
 
 ### Exact search using DERNA objective function
 
 ```
-> ./LinearCDSfold -O DN -l 2 -o P15421.txt example/P15421.fasta
+> ./LinearCDSfold -O DN -l 2 -o P15421_DN.txt example/P15421.fasta
 ```
 
-Output: `cat P15421.txt`
+Output: `cat P15421_DN.txt`
 
 ```
 Amino acid file: example/P15421.fasta
@@ -167,7 +167,7 @@ AUGUAUGGCAAAAUCAUCUUCGUCUUGCUGCUCUCCGGGAUCGUAUCGAUCUCGGCGAGCAGCACGACGGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.(((((((((...))))))))).)))))))).)))))))))))))))))))((((((....((((((((.(((.((((((((((.(((((((((.(((((.((((((((((((((.((((((((((((....)))))).)))))))))))))))))))).)))))))))))))))))))))))))))))))))))))))))
 Folding free energy: -148.700 kcal/mol
 CAI: 0.697
-Total runtime: 12.044 s
+Total runtime: 3.310 s
 ```
 
 ### Beam search using LinearDesign objective function
@@ -191,7 +191,7 @@ AUGUAUGGCAAGAUCAUCUUUGUGCUGCUGCUGAGCGGAAUUGUGAGCAUUUCCGCCAGCAGCACCACAGGGGUGGCCAU
 (((((((((.....((((((((((.((((((((.((((((.((....)).)))))))))))))).)))))))))))))))))))....((....((((((((.(((.(((((....((((((((.((..((((.((((((((((((((..((((.((((((....))))))..)))).)))))))))))))).))))))))))))))....))))).)))))))))))....))
 Folding free energy: -130.300 kcal/mol
 CAI: 0.924
-Total runtime: 0.865 s
+Total runtime: 0.258 s
 ```
 
 ### Beam search using DERNA objective function
@@ -215,7 +215,7 @@ AUGUACGGCAAGAUCAUCUUCGUGCUGCUGCUGAGCGGCAUCGUGUCCAUCAGCGCCAGCAGCACCACCGGCGUGGCCAU
 ..((((((..(((...)))))))))((((((...))))))((((((((((((.((((((((.((((.(((.(.((((((((......((((((((...(((.(((((((((((((.....))))))........)))..)))).))).....)))))))).)))))))).).))......).)))).)))))))).))))))))))))....(((((((((...))).))))))
 Folding free energy: -103.100 kcal/mol
 CAI: 0.991
-Total runtime: 0.879 s
+Total runtime: 0.263 s
 ```
 
 ### Pareto-optimal search using default termination thresholds
